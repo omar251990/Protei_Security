@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: protei-postgres
+    environment:
+      POSTGRES_DB: protei_security
+      POSTGRES_USER: protei
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./migrations:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - protei-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U protei"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: protei-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - protei-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  manager:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.manager
+    container_name: protei-manager
+    environment:
+      CONFIG_PATH: /etc/protei/manager.yaml
+      DB_PASSWORD: ${DB_PASSWORD:-changeme}
+      JWT_SECRET: ${JWT_SECRET:-changeme-jwt-secret}
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./configs:/etc/protei
+      - ./certs:/etc/protei/certs
+      - manager_data:/var/lib/protei
+    networks:
+      - protei-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  scanner:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.scanner
+    container_name: protei-scanner
+    environment:
+      MANAGER_URL: https://manager:8443
+      API_KEY: ${SCANNER_API_KEY}
+    volumes:
+      - ./configs:/etc/protei
+      - ./certs:/etc/protei/certs
+    networks:
+      - protei-network
+    depends_on:
+      - manager
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./web
+      dockerfile: ../docker/Dockerfile.web
+    container_name: protei-web
+    environment:
+      REACT_APP_API_URL: https://localhost:8443/api/v1
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./certs:/etc/nginx/certs
+    networks:
+      - protei-network
+    depends_on:
+      - manager
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  manager_data:
+    driver: local
+
+networks:
+  protei-network:
+    driver: bridge
