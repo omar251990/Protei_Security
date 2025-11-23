@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protei Security Suite</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 3rem;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 2.5rem;
+        }
+        .subtitle {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        .status {
+            background: #f0f9ff;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin: 2rem 0;
+            text-align: left;
+        }
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        .status-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .status-value {
+            color: #059669;
+            font-weight: 600;
+        }
+        .status-value.pending {
+            color: #f59e0b;
+        }
+        .api-info {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+            text-align: left;
+        }
+        .api-info h3 {
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+        .api-info code {
+            background: #fde68a;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        .links {
+            margin-top: 2rem;
+        }
+        .links a {
+            display: inline-block;
+            margin: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .links a:hover {
+            background: #5568d3;
+        }
+        .feature-list {
+            text-align: left;
+            margin: 1.5rem 0;
+        }
+        .feature-list li {
+            padding: 0.5rem 0;
+            color: #4b5563;
+        }
+        .feature-list li::before {
+            content: "✓ ";
+            color: #059669;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ Protei Security Suite</h1>
+        <p class="subtitle">Enterprise Security Platform</p>
+
+        <div class="status">
+            <div class="status-item">
+                <span class="status-label">Central Manager</span>
+                <span class="status-value" id="manager-status">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Database</span>
+                <span class="status-value" id="db-status">Checking...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Platform Status</span>
+                <span class="status-value" id="platform-status">Initializing...</span>
+            </div>
+        </div>
+
+        <div class="api-info">
+            <h3>🔌 API Access</h3>
+            <p><strong>Endpoint:</strong> <code id="api-url">https://localhost:8443/api/v1</code></p>
+            <p><strong>Documentation:</strong> <code>/api/v1/docs</code></p>
+        </div>
+
+        <ul class="feature-list">
+            <li>Asset Discovery & Network Scanning</li>
+            <li>Vulnerability Management with CVE Database</li>
+            <li>Linux & Windows Endpoint Agents</li>
+            <li>Database Security Assessment</li>
+            <li>Network Monitoring & IDS Integration</li>
+            <li>REST API with JWT Authentication</li>
+        </ul>
+
+        <div class="links">
+            <a href="/api/v1/docs" target="_blank">API Documentation</a>
+            <a href="https://github.com/protei/security-suite" target="_blank">GitHub</a>
+        </div>
+
+        <p style="margin-top: 2rem; color: #6b7280; font-size: 0.9rem;">
+            🚧 <strong>Note:</strong> The full React dashboard is under development.<br>
+            Use the REST API for all functionality.
+        </p>
+    </div>
+
+    <script>
+        // Check Manager Health
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+
+                if (data.status === 'healthy') {
+                    document.getElementById('manager-status').textContent = '✓ Running';
+                    document.getElementById('manager-status').style.color = '#059669';
+                    document.getElementById('platform-status').textContent = '✓ Operational';
+                    document.getElementById('platform-status').style.color = '#059669';
+                } else {
+                    document.getElementById('manager-status').textContent = '⚠ Degraded';
+                    document.getElementById('manager-status').className = 'status-value pending';
+                }
+            } catch (error) {
+                document.getElementById('manager-status').textContent = '✗ Offline';
+                document.getElementById('manager-status').style.color = '#dc2626';
+                document.getElementById('platform-status').textContent = '✗ Unavailable';
+                document.getElementById('platform-status').style.color = '#dc2626';
+            }
+
+            // Mock DB status (would need actual endpoint)
+            setTimeout(() => {
+                document.getElementById('db-status').textContent = '✓ Connected';
+                document.getElementById('db-status').style.color = '#059669';
+            }, 500);
+        }
+
+        // Set API URL based on current host
+        const apiUrl = `${window.location.protocol}//${window.location.hostname}:8443/api/v1`;
+        document.getElementById('api-url').textContent = apiUrl;
+
+        // Check health on load
+        checkHealth();
+
+        // Refresh every 30 seconds
+        setInterval(checkHealth, 30000);
+    </script>
+</body>
+</html>
